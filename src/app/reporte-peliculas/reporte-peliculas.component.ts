@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
-
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-reporte-peliculas',
@@ -29,11 +29,11 @@ export class ReportePeliculasComponent implements OnInit {
 
   obtenerGenerosUnicos(peliculas: any[]): string[] {
     const generosSet = new Set<string>();
-  
+
     peliculas.forEach(pelicula => {
       generosSet.add(pelicula.genero);
     });
-  
+
     return Array.from(generosSet);
   }
 
@@ -60,36 +60,33 @@ export class ReportePeliculasComponent implements OnInit {
         }
       }
     ];
-  
+
     const estilos: any = {
       header: {
         fontSize: 18,
         bold: true,
-        margin: [0, 0, 0, 10] // Agrega los márgenes al encabezado
+        margin: [0, 0, 0, 10]
       },
       tableHeader: {
         bold: true,
         fontSize: 12,
         color: 'white',
-        fillColor: '#007bff' // Personaliza el color de fondo del encabezado de la tabla
+        fillColor: '#007bff'
       },
       tableCell: {
         fontSize: 12
       }
     };
-    
-  
+
     const documentDefinition: TDocumentDefinitions = {
       content: contenido,
       styles: estilos
     };
-  
+
     (pdfMake.createPdf(documentDefinition) as any).open();
   }
-  
 
   aplicarFiltro() {
-    // Lógica para filtrar las películas según los criterios seleccionados
     let peliculasFiltradas = this.peliculas;
 
     if (this.filtroGenero) {
@@ -100,7 +97,32 @@ export class ReportePeliculasComponent implements OnInit {
       peliculasFiltradas = peliculasFiltradas.filter(pelicula => pelicula.lanzamiento === this.filtroAnio);
     }
 
-    // Actualizar las películas a mostrar en el informe PDF
+    return peliculasFiltradas;
+  }
+
+  aplicarFiltroPdf() {
+    const peliculasFiltradas = this.aplicarFiltro();
     this.generarPDF(peliculasFiltradas);
+  }
+
+  aplicarFiltroXlxs() {
+    const peliculasFiltradas = this.aplicarFiltro();
+    this.generarExcel(peliculasFiltradas);
+  }
+
+  generarExcel(peliculas: any[]) {
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(peliculas);
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Películas');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(data);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'informe-peliculas.xlsx';
+    link.click();
   }
 }

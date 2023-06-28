@@ -11,8 +11,10 @@
     <input type="number" id="filtro-anio" [(ngModel)]="filtroAnio">
   </div>
   
-  <button (click)="aplicarFiltro()">Aplicar Filtro</button>
-  
+  <div>
+    <button (click)="aplicarFiltroPdf()">Aplicar Filtro PDF</button>
+    <button (click)="aplicarFiltroXlxs()">Aplicar Filtro XLSX</button>
+  </div>
 <table>
 <tr>
     <th>Título</th>
